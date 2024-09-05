@@ -1,7 +1,11 @@
+//fare salva e carica.
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.prefs.Preferences;
 
 public class Application extends JFrame {
@@ -57,9 +61,11 @@ public class Application extends JFrame {
         buttonpPanel = new JPanel();
 
         // bottoni
-        JButton aggiungi = new JButton("Aggiungi");
-        JButton elimina = new JButton("Elimina");
-        JButton modifica = new JButton("Modifica");
+        JButton aggiungi = new JButton("Add");
+        JButton elimina = new JButton("Delete");
+        JButton modifica = new JButton("Edit");
+        JButton salva = new JButton("Save");
+        JButton apri = new JButton("Open");
 
         // actionListener bottoni
         aggiungi.addActionListener(e -> {
@@ -71,10 +77,18 @@ public class Application extends JFrame {
         modifica.addActionListener(e3 -> {
             modificaContatto();
         });
+        salva.addActionListener(e4 -> {
+            save();
+        });
+        apri.addActionListener(e5->{
+            open();
+        });
 
         buttonpPanel.add(aggiungi);
         buttonpPanel.add(elimina);
         buttonpPanel.add(modifica);
+        buttonpPanel.add(salva);
+        buttonpPanel.add(apri);
 
         // Aggiungere la lista e il pannello dei pulsanti al pannello principale
         mainPanel.add(new JScrollPane(contattiList), BorderLayout.CENTER);
@@ -191,6 +205,56 @@ public class Application extends JFrame {
 
         }
         return false;
+    }
+    public void save() {
+        JFileChooser fileChooser = new JFileChooser();
+        int result = fileChooser.showSaveDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try {
+                FileWriter fileWriter = new FileWriter(file);
+
+                for (int i = 0; i < contattiListModel.size(); i++) {
+                    fileWriter.write(contattiListModel.get(i).getNome() + "#");
+                    fileWriter.write(contattiListModel.get(i).getCognome() + "#");
+                    fileWriter.write(contattiListModel.get(i).getNumero() + "#");
+                    fileWriter.write("\n");
+                }
+                fileWriter.close();
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+        }
+
+    }
+    public void open() {
+        JFileChooser fileChooser = new JFileChooser();
+        int result = fileChooser.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    String[] contatto = line.split("#");
+                    if (contatto.length >= 3) {
+                        String nome = contatto[0];
+                        String cognome = contatto[1];
+                        String numero = contatto[2];
+
+                        Contatto newcontatto = new Contatto(nome, cognome, numero);
+                        contattiListModel.addElement(newcontatto);
+
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Errore lettura file: formato non valido");
+                    }
+
+                }
+                
+            } catch (IOException e) {
+                e.printStackTrace();
+                JOptionPane.showMessageDialog(this, "Errore lettura file");
+            }
+        }
     }
 
     public void saveUserDimensions() {
